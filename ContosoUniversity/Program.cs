@@ -2,24 +2,21 @@ using ContosoUniversity.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 public class Program
 {
     private static void Main(string[] args)
     {
-        var host = CreateHostBuilder(args).Build();
-        CreateDbIfNotExists(host);
-        host.Run();
-
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
         builder.Services.AddControllersWithViews();
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
         builder.Services.AddDbContext<SchoolContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-
         var app = builder.Build();
+
+        CreateDbIfNotExists(app);
 
         // Configure the HTTP request pipeline.
         if (!app.Environment.IsDevelopment())
@@ -59,14 +56,4 @@ public class Program
             }
         }
     }
-    public static IHostBuilder CreateHostBuilder(string[] args) =>
-        Host.CreateDefaultBuilder(args)
-            //.UseContentRoot(Directory.GetCurrentDirectory())
-            //.UseEnvironment(Environments.Staging)
-            .ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder.UseStartup<Program>();
-                          //.UseSetting(WebHostDefaults.ApplicationKey,
-                          //            typeof(Program).Assembly.FullName);
-            });
 }
