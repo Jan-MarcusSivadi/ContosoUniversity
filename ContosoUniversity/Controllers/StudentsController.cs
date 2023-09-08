@@ -23,7 +23,11 @@ namespace ContosoUniversity.Controllers
         public async Task<IActionResult> Index()
         {
               return _context.Students != null ? 
-                          View(await _context.Students.ToListAsync()) :
+                          View(await _context.Students
+                            //.Include(s => s.Enrollments)
+                            //.ThenInclude(e => e.Course)
+                            //.AsNoTracking()
+                            .ToListAsync()) :
                           Problem("Entity set 'SchoolContext.Students'  is null.");
         }
 
@@ -36,6 +40,9 @@ namespace ContosoUniversity.Controllers
             }
 
             var student = await _context.Students
+                .Include(s => s.Enrollments)
+                .ThenInclude(e => e.Course)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.ID == id);
             if (student == null)
             {
@@ -58,13 +65,20 @@ namespace ContosoUniversity.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("LastName,FirstMidName,EnrollmentDate")] Student student)
         {
-            //ModelState.Remove("ID");
-            //ModelState.Remove("EnrollmentDate");
-            if (ModelState.IsValid)
+            try
             {
-                _context.Add(student);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                if (ModelState.IsValid)
+                {
+                    _context.Add(student);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError("", "Unable to save changes. "
+                    + "Please try again later, and if the problem persists "
+                    + "contact your system administrator");
             }
             return View(student);
         }
@@ -90,38 +104,35 @@ namespace ContosoUniversity.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("LastName,FirstMidName,EnrollmentDate")] Student student)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,LastName,FirstMidName,EnrollmentDate")] Student student)
         {
             if (id != student.ID)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            var studentToUpdate = await _context.Students
+                .FirstOrDefaultAsync(s => s.ID == id);
+            if (await TryUpdateModelAsync<Student>(studentToUpdate, "", studentToUpdate => studentToUpdate.FirstMidName,
+                s=>s.LastName, s => s.EnrollmentDate))
             {
                 try
                 {
-                    _context.Update(student);
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateException)
                 {
-                    if (!StudentExists(student.ID))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    ModelState.AddModelError("", "Unable to save changes. "
+                    + "Please try again later, and if the problem persists "
+                    + "contact your system administrator");
                 }
-                return RedirectToAction(nameof(Index));
             }
             return View(student);
         }
 
         // GET: Students/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(int? id, bool? saveChangesError = false)
         {
             if (id == null || _context.Students == null)
             {
@@ -129,7 +140,8 @@ namespace ContosoUniversity.Controllers
             }
 
             var student = await _context.Students
-                .FirstOrDefaultAsync(m => m.ID == id);
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.ID == id);
             if (student == null)
             {
                 return NotFound();
@@ -159,7 +171,7 @@ namespace ContosoUniversity.Controllers
 
         private bool StudentExists(int id)
         {
-          return (_context.Students?.Any(e => e.ID == id)).GetValueOrDefault();
+            return (_context.Students?.Any(e => e.ID == id)).GetValueOrDefault();
         }
     }
 }
