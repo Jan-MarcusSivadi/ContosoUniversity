@@ -36,7 +36,7 @@ namespace ContosoUniversity.Controllers
             }
 
             var course = await _context.Courses
-                .FirstOrDefaultAsync(m => m.CourseID == id);
+                .FirstOrDefaultAsync(m => m.ID == id);
             if (course == null)
             {
                 return NotFound();
@@ -85,7 +85,7 @@ namespace ContosoUniversity.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Title,Credits")] Course course)
         {
-            if (id != course.CourseID)
+            if (id != course.ID)
             {
                 return NotFound();
             }
@@ -99,7 +99,7 @@ namespace ContosoUniversity.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!CourseExists(course.CourseID))
+                    if (!CourseExists(course.ID))
                     {
                         return NotFound();
                     } else
@@ -120,7 +120,7 @@ namespace ContosoUniversity.Controllers
                 return NotFound();
             }
             var course = await _context.Courses
-                .FirstOrDefaultAsync(m => m.CourseID == id);
+                .FirstOrDefaultAsync(m => m.ID == id);
             if (course == null)
             {
                 return NotFound();
@@ -149,7 +149,7 @@ namespace ContosoUniversity.Controllers
 
         private bool CourseExists(int id)
         {
-            return (_context.Courses?.Any(e => e.CourseID == id)).GetValueOrDefault();
+            return (_context.Courses?.Any(e => e.ID == id)).GetValueOrDefault();
         }
     }
 }

@@ -162,10 +162,17 @@ namespace ContosoUniversity.Controllers
             var student = await _context.Students.FindAsync(id);
             if (student != null)
             {
-                _context.Students.Remove(student);
+                try
+                {
+                    _context.Students.Remove(student);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException)
+                {
+                    return RedirectToAction(nameof(Delete), new { id = id, saveChangesError = true });
+                }
             }
             
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
