@@ -22,7 +22,7 @@ namespace ContosoUniversity.Controllers
         // GET: Students
         public async Task<IActionResult> Index()
         {
-              return _context.Students != null ? 
+            return _context.Students != null ? 
                           View(await _context.Students
                             //.Include(s => s.Enrollments)
                             //.ThenInclude(e => e.Course)

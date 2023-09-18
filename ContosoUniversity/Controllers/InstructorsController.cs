@@ -15,12 +15,37 @@ namespace ContosoUniversity.Controllers
         }
 
         // GET: Instructors
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? id, int? courseId)
         {
-            return _context.Instructors != null ?
-                        View(await _context.Instructors
-                            .ToListAsync()) : 
-                        Problem("Entity set 'SchoolContext.Instructors' is null.");
+            var vm = new InstructorIndexData();
+            vm.Instructors = await _context.Instructors
+                .Include(i => i.OfficeAssignment)
+                .Include(i => i.CourseAssignments)
+                .ThenInclude(i => i.Course)
+                .ThenInclude(i => i.Enrollments)
+                .ThenInclude(i => i.Student)
+                .Include(i => i.CourseAssignments)
+                .ThenInclude(i => i.Course)
+                .ThenInclude(i => i.Department)
+                .AsNoTracking()
+                .OrderBy(i => i.LastName)
+                .ToListAsync();
+            if (id != null)
+            {
+                ViewData["InstructorID"] = id.Value;
+                Instructor instructor = vm.Instructors
+                    .Where(i => i.ID == id.Value).Single();
+                vm.Courses = instructor.CourseAssignments
+                    .Select(i => i.Course);
+            }
+            if (courseId != null)
+            {
+                ViewData["CourseID"] = courseId.Value;
+                vm.Enrollments = vm.Courses
+                    .Where(x => x.ID == courseId)
+                    .Single().Enrollments;
+            }
+            return View(vm);
         }
 
         // GET: Instructors/Details/5
@@ -32,6 +57,15 @@ namespace ContosoUniversity.Controllers
             }
 
             var instructor = await _context.Instructors
+                .Include(i => i.OfficeAssignment)
+                .Include(i => i.CourseAssignments)
+                .ThenInclude(i => i.Course)
+                .ThenInclude(i => i.Enrollments)
+                .ThenInclude(i => i.Student)
+                .Include(i => i.CourseAssignments)
+                .ThenInclude(i => i.Course)
+                .ThenInclude(i => i.Department)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.ID == id);
             if (instructor == null)
             {

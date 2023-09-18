@@ -10,7 +10,13 @@
     <h4>Instructor</h4>
     <hr />
     <dl class="row">
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FullName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FullName)
+        </dd>
+        @* <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.LastName)
         </dt>
         <dd class = "col-sm-10">
@@ -21,12 +27,50 @@
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.FirstMidName)
-        </dd>
+        </dd> *@
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.HireDate)
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.HireDate)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.OfficeAssignment.Location)
+        </dt>
+        <dd class="col-sm-10">
+        @{
+            if (Model.OfficeAssignment != null)
+            {
+                @Html.DisplayFor(model => model.OfficeAssignment.Location)
+            } 
+            else
+            {
+                @:None
+            }
+        }
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CourseAssignments)
+        </dt>
+        <dd class="col-sm-10">
+            @{
+                if (Model.CourseAssignments != null)
+                {
+                    var arr = Model.CourseAssignments.ToArray();
+                    for (int i = 0; i < (arr.Length); i++)
+                    {
+                        @arr[i].Course.Title
+                        if (i != arr.Length-1)
+                        {
+                            @:,
+                        }
+                    }
+                }
+                else
+                {
+                    @:None
+                }
+            }
         </dd>
     </dl>
 </div>
