@@ -52,23 +52,25 @@
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.CourseAssignments)
         </dt>
-        <dd class="col-sm-10">
+        <dd class="col-sm-10" style="margin:10px; margin-left: 0">
             @{
                 if (Model.CourseAssignments != null)
                 {
                     var arr = Model.CourseAssignments.ToArray();
-                    for (int i = 0; i < (arr.Length); i++)
+                    if (arr.Length > 0)
                     {
-                        @arr[i].Course.Title
-                        if (i != arr.Length-1)
+                        foreach (var a in arr)
                         {
-                            @:,
+                            <p>@a.Course.Title</p>
                         }
+                    } else
+                    {
+                        @:<p>None</p>
                     }
                 }
                 else
                 {
-                    @:None
+                    <p>None</p>
                 }
             }
         </dd>

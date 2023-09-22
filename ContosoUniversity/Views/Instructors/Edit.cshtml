@@ -23,6 +23,42 @@
                 <input asp-for="FirstMidName" class="form-control" />
                 <span asp-validation-for="FirstMidName" class="text-danger"></span>
             </div>
+            <div class="form-group">
+                <label asp-for="HireDate" class="control-label"></label>
+                <input asp-for="HireDate" class="form-control" />
+                <span asp-validation-for="HireDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="OfficeAssignment" class="control-label"></label>
+                <select asp-for="OfficeAssignment" class="form-control" asp-items="ViewBag.OfficeAssignments">
+                    <option value="">-- Select Administrator --</option>
+                </select>
+                <span asp-validation-for="OfficeAssignment" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CourseAssignments" class="control-label"></label>
+                <table>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th></th>
+                    </tr>
+                    @foreach (var course in Model.CourseAssignments)
+                    {
+                        <tr>
+                            <td class="col-sm-2">
+                                <label>@Html.DisplayFor(model => course.Course.ID)</label>
+                            </td>
+                            <td class="col-sm-2">
+                                @Html.DisplayFor(model => course.Course.Title)
+                            </td>
+                            <td class="col-sm-2">
+                                <input type="checkbox" class="form-check" checked />
+                            </td>
+                        </tr>
+                    }
+                </table>
+            </div>
             <input type="hidden" asp-for="HireDate" />
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />

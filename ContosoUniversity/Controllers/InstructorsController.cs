@@ -114,47 +114,94 @@ namespace ContosoUniversity.Controllers
                 return NotFound();
             }
 
-            var instructor = await _context.Instructors.FindAsync(id);
+            var instructor = await _context.Instructors
+                .Include(i => i.OfficeAssignment)
+                .Include(i => i.CourseAssignments)
+                .ThenInclude(i => i.Course)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.ID == id);
             if(instructor == null)
             {
                 return NotFound();
             }
+            PopulateAssignedCourseData(instructor);
             return View(instructor);
         }
 
         // POST: Instructors/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,LastName","FirstMidName,HireDate")] Instructor instructor)
+        public async Task<IActionResult> Edit(int? id, string[] selectedCourses)
         {
-            if (id != instructor.ID)
+            if (id == null)
             {
                 return NotFound();
             }
-
-            ModelState.Remove("CourseAssignments");
-            ModelState.Remove("OfficeAssignment");
-            if (ModelState.IsValid)
+            var instructorToUpdate = await _context.Instructors
+                .Include(i => i.OfficeAssignment)
+                .Include(i => i.CourseAssignments)
+                .ThenInclude(i => i.Course)
+                .FirstOrDefaultAsync(s => s.ID == id);
+            if (await TryUpdateModelAsync<Instructor>(instructorToUpdate, "", 
+                i=>i.FirstMidName,
+                i=>i.LastName,
+                i=>i.HireDate,
+                i=>i.OfficeAssignment))
             {
+                if (string.IsNullOrWhiteSpace(instructorToUpdate.OfficeAssignment?.Location))
+                {
+                    instructorToUpdate.OfficeAssignment = null;
+                }
+                //UpdateInstructorCourses(selectedCourses, instructorToUpdate);
                 try
                 {
-                    _context.Update(instructor);
+                    //_context.Update(instructorToUpdate);
                     await _context.SaveChangesAsync();
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateException)
                 {
-                    if (!InstructorExists(instructor.ID))
+                    ModelState.AddModelError("", "Unable to save changes. "
+                    + "Please try again later, and if the problem persists "
+                    + "contact your system administrator");
+                }
+                UpdateInstructorCourses(selectedCourses, instructorToUpdate);
+                PopulateAssignedCourseData(instructorToUpdate);
+            }
+            return View();
+        }
+
+        private void UpdateInstructorCourses(string[] selectedCourses, Instructor instructorToUpdate)
+        {
+            if (selectedCourses == null)
+            {
+                instructorToUpdate.CourseAssignments = new List<CourseAssignment>();
+                return;
+            }
+            var selectedCoursesHS = new HashSet<string>(selectedCourses);
+            var instructorCourses = new HashSet<int>(instructorToUpdate.CourseAssignments.Select(c => c.CourseID));
+            foreach (var course in _context.Courses)
+            {
+                if (!selectedCoursesHS.Contains(course.ID.ToString()))
+                {
+                    if (!instructorCourses.Contains(course.ID))
                     {
-                        return NotFound();
+                        instructorToUpdate.CourseAssignments.Add(new CourseAssignment
+                        {
+                            InstructorID = instructorToUpdate.ID,
+                            CourseID = course.ID
+                        });
                     }
                     else
                     {
-                        throw;
+                        if (instructorCourses.Contains(course.ID))
+                        {
+                            CourseAssignment courseToRemove = instructorToUpdate.CourseAssignments
+                                .FirstOrDefault(c => c.CourseID == course.ID);
+                            _context.Remove(courseToRemove);
+                        }
                     }
                 }
-                return RedirectToAction(nameof(Index));
             }
-            return View(instructor);
         }
 
         // GET: Instructors/Delete/5
@@ -182,11 +229,19 @@ namespace ContosoUniversity.Controllers
             {
                 return Problem("Entity set 'SchoolContext.Instructors' is null.");
             }
-            var instructor = await _context.Instructors.FindAsync(id);
+            Instructor instructor = await _context.Instructors
+                .Include(i => i.CourseAssignments)
+                .SingleAsync(i => i.ID == id);
+            var departments = await _context.Departments
+                .Where(d => d.InstructorID == id)
+                .ToListAsync();
+            departments.ForEach(d => d.InstructorID = null);
+
             if (instructor != null)
             {
                 _context.Instructors.Remove(instructor);
             }
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
@@ -194,6 +249,23 @@ namespace ContosoUniversity.Controllers
         private bool InstructorExists(int id)
         {
             return (_context.Instructors?.Any(e => e.ID == id)).GetValueOrDefault();
+        }
+
+        private void PopulateAssignedCourseData(Instructor instructor)
+        {
+            var allCourses = _context.Courses;
+            var instructorCourses = new HashSet<int>(instructor.CourseAssignments.Select(c => c.ID));
+            var vm = new List<AssignedCourseData>();
+            foreach (var course in allCourses)
+            {
+                vm.Add(new AssignedCourseData
+                {
+                    CourseID = course.ID,
+                    Title = course.Title,
+                    Assigned = instructorCourses.Contains(course.ID)
+                });
+            }
+            ViewData["Courses"] = vm;
         }
     }
 }
