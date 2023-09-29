@@ -42,20 +42,17 @@
                     <tr>
                         @{
                             int cnt = 0;
-                            List<ContosoUniversity.Models.AssignedCourseData> courses = ViewBag.Courses;
-                            @:<p>@TempData["message"]</p>
+                                List<ContosoUniversity.Models.AssignedCourseData> courses = ViewBag.Courses;
 
                             foreach (var course in courses)
                             {
-                                if (cnt++ %3 == 0)
+                                if (cnt++ % 3 == 0)
                                 {
                                     @:</tr><tr>
                                 }
                                 @:<td>
-                                <input type="checkbox"
-                                name="selectedCourses"
-                                value="@course.CourseID"
-                                @(Html.Raw(course.Assigned ? "checked=\"checked\"" : "")) />
+                                <input type="checkbox" name="selectedCoures" value="@course.CourseID"
+                                @(Html.Raw(course.Assigned ? "checked=\"checked\"":"")) />
                                 @course.CourseID @: @course.Title
                                 @:</td>
                             }
@@ -80,3 +77,4 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
+

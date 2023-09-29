@@ -1,6 +1,7 @@
 ﻿using ContosoUniversity.Data;
 using ContosoUniversity.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace ContosoUniversity.Controllers
@@ -86,31 +87,32 @@ namespace ContosoUniversity.Controllers
         // POST: Instructors/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("LastName","FirstMidName","HireDate,OfficeAssignments")] Instructor instructor,
-            string selectedCourses)
+        public async Task<IActionResult> Create([Bind("LastName,FirstMidName,HireDate,OfficeAssignment")] Instructor instructor,
+            string[] selectedCourses)
         {
             //ModelState.Remove("CourseAssignments");
             //ModelState.Remove("OfficeAssignment");
-            if (selectedCourses != null)
+            ModelState.Remove("OfficeAssignment.Instructor");
+            if (selectedCourses != null && selectedCourses.Length > 0)
             {
-
-            }
-            try
-            {
-                if (ModelState.IsValid)
+                instructor.CourseAssignments = new List<CourseAssignment>();
+                foreach (var course in selectedCourses)
                 {
-                    _context.Add(instructor);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
+                    var courseToAdd = new CourseAssignment
+                    {
+                        InstructorID = instructor.ID,
+                        CourseID = Convert.ToInt32(course),
+                    };
+                    instructor.CourseAssignments.Add(courseToAdd);
                 }
-
             }
-            catch (Exception)
+            if (ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Unable to save changes. "
-                    + "Please try again later, and if the problem persists "
-                    + "contact your system administrator");
+                _context.Add(instructor);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
+            PopulateAssignedCourseData(instructor);
             return View(instructor);
         }
 
@@ -139,31 +141,38 @@ namespace ContosoUniversity.Controllers
         // POST: Instructors/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ID,LastName,FirstMidName,HireDate")] Instructor instructor) //string[] selectedCourses
+        public async Task<IActionResult> Edit(int? id, string[] selectedCourses) //string[] selectedCourses
         {
-            if (id != instructor.ID)
+            if (id == null || _context.Instructors == null)
             {
                 return NotFound();
             }
-            ModelState.Remove("OfficeAssignment");
-            ModelState.Remove("CourseAssignments");
-            //var instructorToUpdate = await _context.Instructors
-            //    .Include(i => i.OfficeAssignment)
-            //    .Include(i => i.CourseAssignments)
-            //    .ThenInclude(i => i.Course)
-            //    .FirstOrDefaultAsync(s => s.ID == id);
+            //ModelState.Remove("OfficeAssignment");
+            //ModelState.Remove("CourseAssignments");
+            //ModelState.Remove("OfficeAssignment.Instructor");
+            var model = ModelState;
             var instructorToUpdate = await _context.Instructors
+                .Include(i => i.OfficeAssignment)
+                .Include(i => i.CourseAssignments)
+                .ThenInclude(i => i.Course)
                 .FirstOrDefaultAsync(s => s.ID == id);
-            if (await TryUpdateModelAsync<Instructor>(instructorToUpdate, "", studentToUpdate => studentToUpdate.FirstMidName,
-                s => s.LastName))
+
+            var tryUpdate = await TryUpdateModelAsync<Instructor>(instructorToUpdate, "", s =>
+                s.FirstMidName,
+                s => s.LastName,
+                s => s.HireDate,
+                s => s.OfficeAssignment);
+
+            if (tryUpdate)
             {
+                if (string.IsNullOrWhiteSpace(instructorToUpdate.OfficeAssignment?.Location))
+                {
+                    instructorToUpdate.OfficeAssignment = null;
+                }
+                UpdateInstructorCourses(selectedCourses, instructorToUpdate);
                 try
                 {
-                    PopulateAssignedCourseData(instructorToUpdate);
                     await _context.SaveChangesAsync();
-
-                    //PopulateAssignedCourseData(instructorToUpdate);
-                    return View(nameof(Index));
                 }
                 catch (DbUpdateException)
                 {
@@ -172,63 +181,16 @@ namespace ContosoUniversity.Controllers
                     + "contact your system administrator");
 
                 }
-                finally {
-                    TempData["message"] = "test";
-                }
+                return RedirectToAction(nameof(Index));
             }
+            UpdateInstructorCourses(selectedCourses, instructorToUpdate);
+            PopulateAssignedCourseData(instructorToUpdate);
             return View(instructorToUpdate);
-            //await TryUpdateModelAsync<Instructor>(instructorToUpdate, "",
-            //    i => i.FirstMidName,
-            //    i => i.LastName,
-            //    i => i.HireDate,
-            //    i => i.OfficeAssignment)
-            //ModelState.Remove("");
-            //if (true)
-            //{
-            //    if (string.IsNullOrWhiteSpace(instructorToUpdate.OfficeAssignment?.Location))
-            //    {
-            //        instructorToUpdate.OfficeAssignment = null;
-            //    }
-
-            //    if (await TryUpdateModelAsync<Instructor>(instructorToUpdate, "", instructorToUpdate => instructorToUpdate.FirstMidName,
-            //    s => s.LastName, s => s.HireDate, s => s.OfficeAssignment))
-            //    {
-            //        try
-            //        {
-            //            await _context.SaveChangesAsync();
-            //            return RedirectToAction(nameof(Index));
-            //        }
-            //        catch (DbUpdateException)
-            //        {
-            //            ModelState.AddModelError("", "Unable to save changes. "
-            //            + "Please try again later, and if the problem persists "
-            //            + "contact your system administrator");
-            //        }
-            //    }
-
-            //    //UpdateInstructorCourses(selectedCourses, instructorToUpdate);
-            //    //try
-            //    //{
-            //    //    _context.Update(instructorToUpdate);
-            //    //    await _context.SaveChangesAsync();
-            //    //    UpdateInstructorCourses(selectedCourses, instructorToUpdate);
-            //    //    PopulateAssignedCourseData(instructorToUpdate);
-            //    //    return RedirectToAction(nameof(Index));
-            //    //}
-            //    //catch (DbUpdateException)
-            //    //{
-            //    //    ModelState.AddModelError("", "Unable to save changes. "
-            //    //    + "Please try again later, and if the problem persists "
-            //    //    + "contact your system administrator");
-            //    //}
-            //}
-            //return View(instructorToUpdate);
-            //return View(instructor);
         }
 
         private void UpdateInstructorCourses(string[] selectedCourses, Instructor instructorToUpdate)
         {
-            if (selectedCourses == null)
+            if (selectedCourses == null || selectedCourses.Length <= 0)
             {
                 instructorToUpdate.CourseAssignments = new List<CourseAssignment>();
                 return;
@@ -318,10 +280,9 @@ namespace ContosoUniversity.Controllers
             return (_context.Instructors?.Any(e => e.ID == id)).GetValueOrDefault();
         }
 
-        private async void PopulateAssignedCourseData(Instructor instructor)
+        private void PopulateAssignedCourseData(Instructor instructor)
         {
-            var allCourses = await _context.Courses
-                .ToListAsync();
+            var allCourses = _context.Courses;
             var instructorCourses = new HashSet<int>(instructor.CourseAssignments.Select(c => c.CourseID));
             var vm = new List<AssignedCourseData>();
             foreach (var course in allCourses)
@@ -333,7 +294,6 @@ namespace ContosoUniversity.Controllers
                     Assigned = instructorCourses.Contains(course.ID)
                 });
             }
-            //ViewBag.Courses = vm;
             ViewData["Courses"] = vm;
         }
     }
