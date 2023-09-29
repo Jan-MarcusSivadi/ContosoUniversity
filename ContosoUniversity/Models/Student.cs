@@ -9,8 +9,6 @@ public class Student
     public string FirstMidName { get; set; }
     [Display(Name = "Full Name")]
     public string FullName { get { return LastName + ", " + FirstMidName; } }
-
-    [DataType(DataType.Date)]
     //[DisplayFormat(DataFormatString = "{0:dd-MM-yyyy}", ApplyFormatInEditMode = true)]
     public DateTime EnrollmentDate { get; set; }
     public ICollection<Enrollment>? Enrollments { get; set; }

@@ -1,0 +1,62 @@
+﻿@model IEnumerable<ContosoUniversity.Models.Department>
+
+@{
+    ViewData["Title"] = "Departments";
+}
+
+<h1>Departments</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.Name)</th>
+            <th>@Html.DisplayNameFor(model => model.Budget)</th>
+            <th>@Html.DisplayNameFor(model => model.StartDate)</th>
+            <th>@Html.DisplayNameFor(model => model.RowVersion)</th>
+            <th>@Html.DisplayNameFor(model => model.Administrator.FullName)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(model => item.Name)</td>
+                <td>@Html.DisplayFor(model => item.Budget)</td>
+                <td>@Html.DisplayFor(model => item.StartDate)</td>
+                <td>
+                    @{
+                        if (item.RowVersion.HasValue)
+                        {
+                            @:@item.RowVersion.Value
+                        }
+                        else
+                        {
+                            @:0
+                        }
+                    }
+                </td>
+                <td>
+                    @{
+                        if (item.Administrator != null)
+                        {
+                            @:@item.Administrator.FullName
+                        }
+                        else
+                        {
+                            @:None
+                        }
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.ID">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

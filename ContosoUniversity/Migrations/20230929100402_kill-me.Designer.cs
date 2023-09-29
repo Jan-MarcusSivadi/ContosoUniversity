@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ContosoUniversity.Migrations
 {
     [DbContext(typeof(SchoolContext))]
-    [Migration("20230922103309_CourseAssignmentMigration")]
-    partial class CourseAssignmentMigration
+    [Migration("20230929100402_kill-me")]
+    partial class killme
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -278,8 +278,7 @@ namespace ContosoUniversity.Migrations
                 {
                     b.Navigation("CourseAssignments");
 
-                    b.Navigation("OfficeAssignment")
-                        .IsRequired();
+                    b.Navigation("OfficeAssignment");
                 });
 
             modelBuilder.Entity("ContosoUniversity.Models.Student", b =>

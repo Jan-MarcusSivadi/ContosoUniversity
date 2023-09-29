@@ -77,16 +77,24 @@ namespace ContosoUniversity.Controllers
         // GET: Instructors/Create
         public IActionResult Create()
         {
+            var instructor = new Instructor();
+            instructor.CourseAssignments = new List<CourseAssignment>();
+            PopulateAssignedCourseData(instructor);
             return View();
         }
 
         // POST: Instructors/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("LastName","FirstMidName","HireDate")] Instructor instructor)
+        public async Task<IActionResult> Create([Bind("LastName","FirstMidName","HireDate,OfficeAssignments")] Instructor instructor,
+            string selectedCourses)
         {
-            ModelState.Remove("CourseAssignments");
-            ModelState.Remove("OfficeAssignment");
+            //ModelState.Remove("CourseAssignments");
+            //ModelState.Remove("OfficeAssignment");
+            if (selectedCourses != null)
+            {
+
+            }
             try
             {
                 if (ModelState.IsValid)
@@ -131,43 +139,91 @@ namespace ContosoUniversity.Controllers
         // POST: Instructors/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int? id, string[] selectedCourses)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,LastName,FirstMidName,HireDate")] Instructor instructor) //string[] selectedCourses
         {
-            if (id == null)
+            if (id != instructor.ID)
             {
                 return NotFound();
             }
+            ModelState.Remove("OfficeAssignment");
+            ModelState.Remove("CourseAssignments");
+            //var instructorToUpdate = await _context.Instructors
+            //    .Include(i => i.OfficeAssignment)
+            //    .Include(i => i.CourseAssignments)
+            //    .ThenInclude(i => i.Course)
+            //    .FirstOrDefaultAsync(s => s.ID == id);
             var instructorToUpdate = await _context.Instructors
-                .Include(i => i.OfficeAssignment)
-                .Include(i => i.CourseAssignments)
-                .ThenInclude(i => i.Course)
                 .FirstOrDefaultAsync(s => s.ID == id);
-            if (await TryUpdateModelAsync<Instructor>(instructorToUpdate, "", 
-                i=>i.FirstMidName,
-                i=>i.LastName,
-                i=>i.HireDate,
-                i=>i.OfficeAssignment))
+            if (await TryUpdateModelAsync<Instructor>(instructorToUpdate, "", studentToUpdate => studentToUpdate.FirstMidName,
+                s => s.LastName))
             {
-                if (string.IsNullOrWhiteSpace(instructorToUpdate.OfficeAssignment?.Location))
-                {
-                    instructorToUpdate.OfficeAssignment = null;
-                }
-                //UpdateInstructorCourses(selectedCourses, instructorToUpdate);
                 try
                 {
-                    //_context.Update(instructorToUpdate);
+                    PopulateAssignedCourseData(instructorToUpdate);
                     await _context.SaveChangesAsync();
+
+                    //PopulateAssignedCourseData(instructorToUpdate);
+                    return View(nameof(Index));
                 }
                 catch (DbUpdateException)
                 {
                     ModelState.AddModelError("", "Unable to save changes. "
                     + "Please try again later, and if the problem persists "
                     + "contact your system administrator");
+
                 }
-                UpdateInstructorCourses(selectedCourses, instructorToUpdate);
-                PopulateAssignedCourseData(instructorToUpdate);
+                finally {
+                    TempData["message"] = "test";
+                }
             }
-            return View();
+            return View(instructorToUpdate);
+            //await TryUpdateModelAsync<Instructor>(instructorToUpdate, "",
+            //    i => i.FirstMidName,
+            //    i => i.LastName,
+            //    i => i.HireDate,
+            //    i => i.OfficeAssignment)
+            //ModelState.Remove("");
+            //if (true)
+            //{
+            //    if (string.IsNullOrWhiteSpace(instructorToUpdate.OfficeAssignment?.Location))
+            //    {
+            //        instructorToUpdate.OfficeAssignment = null;
+            //    }
+
+            //    if (await TryUpdateModelAsync<Instructor>(instructorToUpdate, "", instructorToUpdate => instructorToUpdate.FirstMidName,
+            //    s => s.LastName, s => s.HireDate, s => s.OfficeAssignment))
+            //    {
+            //        try
+            //        {
+            //            await _context.SaveChangesAsync();
+            //            return RedirectToAction(nameof(Index));
+            //        }
+            //        catch (DbUpdateException)
+            //        {
+            //            ModelState.AddModelError("", "Unable to save changes. "
+            //            + "Please try again later, and if the problem persists "
+            //            + "contact your system administrator");
+            //        }
+            //    }
+
+            //    //UpdateInstructorCourses(selectedCourses, instructorToUpdate);
+            //    //try
+            //    //{
+            //    //    _context.Update(instructorToUpdate);
+            //    //    await _context.SaveChangesAsync();
+            //    //    UpdateInstructorCourses(selectedCourses, instructorToUpdate);
+            //    //    PopulateAssignedCourseData(instructorToUpdate);
+            //    //    return RedirectToAction(nameof(Index));
+            //    //}
+            //    //catch (DbUpdateException)
+            //    //{
+            //    //    ModelState.AddModelError("", "Unable to save changes. "
+            //    //    + "Please try again later, and if the problem persists "
+            //    //    + "contact your system administrator");
+            //    //}
+            //}
+            //return View(instructorToUpdate);
+            //return View(instructor);
         }
 
         private void UpdateInstructorCourses(string[] selectedCourses, Instructor instructorToUpdate)
@@ -212,7 +268,18 @@ namespace ContosoUniversity.Controllers
                 return NotFound();
             }
             var instructor = await _context.Instructors
+                .Include(i => i.OfficeAssignment)
+                .Include(i => i.CourseAssignments)
+                .ThenInclude(i => i.Course)
+                .ThenInclude(i => i.Enrollments)
+                .ThenInclude(i => i.Student)
+                .Include(i => i.CourseAssignments)
+                .ThenInclude(i => i.Course)
+                .ThenInclude(i => i.Department)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.ID == id);
+            //var instructor = await _context.Instructors
+            //    .FirstOrDefaultAsync(m => m.ID == id);
             if (instructor == null)
             {
                 return NotFound();
@@ -251,10 +318,11 @@ namespace ContosoUniversity.Controllers
             return (_context.Instructors?.Any(e => e.ID == id)).GetValueOrDefault();
         }
 
-        private void PopulateAssignedCourseData(Instructor instructor)
+        private async void PopulateAssignedCourseData(Instructor instructor)
         {
-            var allCourses = _context.Courses;
-            var instructorCourses = new HashSet<int>(instructor.CourseAssignments.Select(c => c.ID));
+            var allCourses = await _context.Courses
+                .ToListAsync();
+            var instructorCourses = new HashSet<int>(instructor.CourseAssignments.Select(c => c.CourseID));
             var vm = new List<AssignedCourseData>();
             foreach (var course in allCourses)
             {
@@ -265,6 +333,7 @@ namespace ContosoUniversity.Controllers
                     Assigned = instructorCourses.Contains(course.ID)
                 });
             }
+            //ViewBag.Courses = vm;
             ViewData["Courses"] = vm;
         }
     }

@@ -1,4 +1,5 @@
 ﻿using ContosoUniversity.Models;
+using Microsoft.AspNetCore.Mvc.Formatters;
 
 namespace ContosoUniversity.Data;
 
@@ -214,7 +215,13 @@ public static class DbInitializer
         };
         foreach (Enrollment e in enrollments)
         {
-            context.Enrollments.Add(e);
+            var enrollmentInDatabase = context.Enrollments.Where(
+                s => s.StudentID == e.StudentID &&
+                s.CourseID == e.CourseID).SingleOrDefault();
+            if (enrollmentInDatabase == null)
+            {
+                context.Enrollments.Add(e);
+            }
         }
         context.SaveChanges();
     }

@@ -1,7 +1,7 @@
 ﻿@model ContosoUniversity.Models.InstructorIndexData
 
 @{
-    ViewData["Title"] = "Courses";
+    ViewData["Title"] = "Instructors";
 }
 
 <h1>Instructors</h1>
@@ -64,7 +64,7 @@
                         Details
                     </a>
                     |
-                    <a asp-action="Delete" asp-route-id="@item.ID">Delete</a> |
+                    <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
                 </td>
             </tr>
         }

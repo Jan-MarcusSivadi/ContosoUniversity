@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace ContosoUniversity.Migrations
 {
-    public partial class init123 : Migration
+    public partial class killme : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -43,17 +43,17 @@ namespace ContosoUniversity.Migrations
                 name: "Department",
                 columns: table => new
                 {
-                    DepartmentID = table.Column<int>(type: "int", nullable: false)
+                    ID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Budget = table.Column<decimal>(type: "Money", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     InstructorID = table.Column<int>(type: "int", nullable: true),
-                    RoWVersion = table.Column<byte>(type: "tinyint", rowVersion: true, nullable: false)
+                    RowVersion = table.Column<byte>(type: "tinyint", rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Department", x => x.DepartmentID);
+                    table.PrimaryKey("PK_Department", x => x.ID);
                     table.ForeignKey(
                         name: "FK_Department_Instructor_InstructorID",
                         column: x => x.InstructorID,
@@ -95,21 +95,21 @@ namespace ContosoUniversity.Migrations
                         name: "FK_Course_Department_DepartmentID",
                         column: x => x.DepartmentID,
                         principalTable: "Department",
-                        principalColumn: "DepartmentID");
+                        principalColumn: "ID");
                 });
 
             migrationBuilder.CreateTable(
                 name: "CourseAssignment",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    ID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     InstructorID = table.Column<int>(type: "int", nullable: false),
                     CourseID = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CourseAssignment", x => x.Id);
+                    table.PrimaryKey("PK_CourseAssignment", x => x.ID);
                     table.ForeignKey(
                         name: "FK_CourseAssignment_Course_CourseID",
                         column: x => x.CourseID,
@@ -128,7 +128,7 @@ namespace ContosoUniversity.Migrations
                 name: "Enrollment",
                 columns: table => new
                 {
-                    EnrollmentID = table.Column<int>(type: "int", nullable: false)
+                    ID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CourseID = table.Column<int>(type: "int", nullable: false),
                     StudentID = table.Column<int>(type: "int", nullable: false),
@@ -136,7 +136,7 @@ namespace ContosoUniversity.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Enrollment", x => x.EnrollmentID);
+                    table.PrimaryKey("PK_Enrollment", x => x.ID);
                     table.ForeignKey(
                         name: "FK_Enrollment_Course_CourseID",
                         column: x => x.CourseID,
