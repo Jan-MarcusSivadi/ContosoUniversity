@@ -16,11 +16,73 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Title)
         </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Department)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Department.Name)
+        </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Credits)
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Credits)
+        </dd>
+        <dt class="col-sm-2">
+            Instructors
+        </dt>
+        <dd class="col-sm-10">
+            @{
+                var courseAssignments = Model.CourseAssignments.ToArray();
+                
+                if (courseAssignments.Length > 0)
+                {
+                    <ul>
+                        @foreach (var i in courseAssignments)
+                        {
+
+                            <li>@i.Instructor.FullName
+                            @if (@i.Instructor.OfficeAssignment != null)
+                            {
+                                <b>@i.Instructor.OfficeAssignment.Location</b>
+                            }
+                            else
+                            {
+                                <b>?</b>
+                            }
+                            </li>
+
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p>None</p>
+                }
+                
+                
+                
+            }
+        </dd>
+        <dt class="col-sm-2">
+            Enrollments
+        </dt>
+        <dd class="col-sm-10">
+            @{
+                var enrollments = Model.Enrollments.ToArray();
+                @if (enrollments.Length > 0)
+                {
+                    <ul>
+                        @foreach (var i in enrollments)
+                        {
+                            <li>@i.Student.FullName</li>
+                        }
+                    </ul>
+                } else
+                {
+                    <p>None</p>
+                }
+            }
         </dd>
     </dl>
 </div>

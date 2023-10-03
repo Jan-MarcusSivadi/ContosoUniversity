@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace ContosoUniversity.Migrations
 {
-    public partial class killme : Migration
+    public partial class testing : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -83,7 +83,8 @@ namespace ContosoUniversity.Migrations
                 name: "Course",
                 columns: table => new
                 {
-                    ID = table.Column<int>(type: "int", nullable: false),
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Credits = table.Column<int>(type: "int", nullable: false),
                     DepartmentID = table.Column<int>(type: "int", nullable: true)
@@ -102,14 +103,12 @@ namespace ContosoUniversity.Migrations
                 name: "CourseAssignment",
                 columns: table => new
                 {
-                    ID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
                     InstructorID = table.Column<int>(type: "int", nullable: false),
                     CourseID = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CourseAssignment", x => x.ID);
+                    table.PrimaryKey("PK_CourseAssignment", x => new { x.CourseID, x.InstructorID });
                     table.ForeignKey(
                         name: "FK_CourseAssignment_Course_CourseID",
                         column: x => x.CourseID,
@@ -155,11 +154,6 @@ namespace ContosoUniversity.Migrations
                 name: "IX_Course_DepartmentID",
                 table: "Course",
                 column: "DepartmentID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CourseAssignment_CourseID",
-                table: "CourseAssignment",
-                column: "CourseID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CourseAssignment_InstructorID",

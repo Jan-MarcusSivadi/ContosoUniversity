@@ -112,11 +112,11 @@ public static class DbInitializer
 
         var courses = new Course[]
         {
-            new Course() {ID=1050,Title="Programmeerimine",Credits=160},
-            new Course() {ID=6900,Title="Keemia",Credits=160},
-            new Course() {ID=1420,Title="Matemaatika",Credits=160},
-            new Course() {ID=5555,Title="Testimine",Credits=160},
-            new Course() {ID=1234,Title="Riigikaitse",Credits=160},
+            new Course() {ID=1050,Title="Programmeerimine",Credits=160,DepartmentID = departments.Single(d => d.Name == "Infotehnoloogia").ID},
+            new Course() {ID=6900,Title="Keemia",Credits=160,DepartmentID = departments.Single(d => d.Name == "Kokandus").ID},
+            new Course() {ID=1420,Title="Matemaatika",Credits=160,DepartmentID = departments.Single(d => d.Name == "Ettevõtlus").ID},
+            new Course() {ID=5555,Title="Testimine",Credits=160,DepartmentID = departments.Single(d => d.Name == "Infotehnoloogia").ID},
+            new Course() {ID=1234,Title="Riigikaitse",Credits=160,DepartmentID = departments.Single(d => d.Name == "Jõulu-õpetus").ID},
         };
         foreach (Course c in courses)
         {
@@ -169,6 +169,11 @@ public static class DbInitializer
                 CourseID = courses.Single(c => c.Title == "Riigikaitse").ID,
                 InstructorID = instructors.Single(i => i.LastName == "Surprise").ID
             },
+            new CourseAssignment()
+            {
+                CourseID = courses.Single(c => c.Title == "Testimine").ID,
+                InstructorID = instructors.Single(i => i.LastName == "Parm").ID
+            },
         };
         foreach (CourseAssignment ci in courseAssignments)
         {
@@ -189,7 +194,7 @@ public static class DbInitializer
             new Enrollment() {StudentID=2,CourseID=1420,Grade=Grade.A},
             new Enrollment() {StudentID=2,CourseID=5555,Grade=Grade.C},
             new Enrollment() {StudentID=2,CourseID=1234,Grade=Grade.C},
-            new Enrollment() {StudentID=2,CourseID=1234,Grade=Grade.D},
+            //new Enrollment() {StudentID=2,CourseID=1234,Grade=Grade.D},
             // student 3
             new Enrollment() {StudentID=3,CourseID=1050,Grade=Grade.C},
             new Enrollment() {StudentID=3,CourseID=6900,Grade=Grade.A},
@@ -215,6 +220,7 @@ public static class DbInitializer
         };
         foreach (Enrollment e in enrollments)
         {
+            //context.Enrollments.Add(e);
             var enrollmentInDatabase = context.Enrollments.Where(
                 s => s.StudentID == e.StudentID &&
                 s.CourseID == e.CourseID).SingleOrDefault();

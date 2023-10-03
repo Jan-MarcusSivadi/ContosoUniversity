@@ -12,11 +12,7 @@
     <div class="col-md-4">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            @*<div class="form-group">
-                <label asp-for="ID" class="control-label"></label>
-                <input asp-for="ID" class="form-control" />
-                <span asp-validation-for="ID" class="text-danger"></span>
-            </div>*@
+            <input type="hidden" asp-for="ID" value="@ViewBag.CourseID"/>
             <div class="form-group">
                 <label asp-for="Title" class="control-label"></label>
                 <input asp-for="Title" class="form-control" />
@@ -26,6 +22,65 @@
                 <label asp-for="Credits" class="control-label"></label>
                 <input asp-for="Credits" class="form-control" />
                 <span asp-validation-for="Credits" class="text-danger"></span>
+            </div>
+            <label class="control-label">Instructors</label>
+            <div class="form-control">
+                <div class="col-md-offset-2 col-md-10">
+                    <table>
+                        <tr>
+                            @{
+                                int cnt = 0;
+                                List<ContosoUniversity.Models.AssignedCourseData> instructors = ViewBag.Instructors;
+
+                                foreach (var instructor in instructors)
+                                {
+                                    if (cnt++ % 3 == 0)
+                                    {
+                                        @:</tr><tr>
+                                    }
+                                    @:<td>
+                                        <input type="checkbox" name="selectedInstructors" value="@instructor.ID"
+                                    @(Html.Raw(instructor.Assigned ? "checked=\"checked\"":"")) />
+                                    @instructor.ID @: @instructor.Title
+                                    @:</td>
+                                }
+                            }
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <label class="control-label">Students</label>
+            <div class="form-control">
+                <div class="col-md-offset-2 col-md-10">
+                    <table>
+                        <tr>
+                            @{
+                                int cnt2 = 0;
+                                List<ContosoUniversity.Models.AssignedCourseData> students = ViewBag.Students;
+
+                                foreach (var student in students)
+                                {
+                                    if (cnt2++ % 3 == 0)
+                                    {
+                                        @:</tr><tr>
+                                    }
+                                    @:<td>
+                                        <input type="checkbox" name="selectedStudents" value="@student.ID"
+                                        @(Html.Raw(student.Assigned ? "checked=\"checked\"":"")) />
+                                        @student.ID @: @student.Title
+                                    @:</td>
+                                }
+                            }
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="Department" class="control-label">Department</label>
+                <select name="selectedDepartment" asp-for="Department" class="form-control"asp-items="ViewBag.Departments">
+                    <option value="">-- select option --</option>
+                </select>
+                <span asp-validation-for="Department" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
